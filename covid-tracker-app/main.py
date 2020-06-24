@@ -1,43 +1,43 @@
 print("HEY !! All the best, Happy programming")
 import requests
-import bs4
-import tkinter as tk
-import plyer
 import time
-import datetime
+from plyer import notification
+from bs4 import BeautifulSoup
 
-#to get the data from html webpage
-def get_html_data(url):
-    data = requests.get(url)
-    return data
 
-def get_corona_detail_of_india():
-    url = "https://www.mohfw.gov.in/"
-    html_data = get_html_data(url)
-    bs= bs4.BeautifulSoup(html_data.text,'html.parser')
-    #print(bs.prettify())
-    '''active = bs.find_all("li",class_="bg-blue")
-    print(active)
-    for block in active:
-        active_no = block.find("li").get_text()
-        active_name= block.find("span").get_text()
-        print()
-        print()
-        print(active_name+"   :   "+active_no )'''
+def notifyMe(title, message):
+    notification.notify(
+        title=title,
+        message=message,
+        app_icon="E:\covid.ico",
+        timeout=15
+    )
 
-    info = bs.find("div", class_="site-stats-count").find("ul").find_all("li")
-    print(info)
-    print()
-    print(len(info))
-    print()
-    for block in info:
-            count = block.find("strong").get_text()
-            text = block.find("span").get_text()
-            print(text + "   :   " + count)
 
-def main():
-    get_corona_detail_of_india()
+def getData(url):
+    r = requests.get(url)
+    return r.text
+
 
 if __name__ == '__main__':
-    main()
+    while True:
+        myHtmlData = getData('https://www.mohfw.gov.in/')
+        soup = BeautifulSoup(myHtmlData, 'html.parser')
+        # print(soup.prettify())
 
+        myData = ""
+        for x in soup.find('tbody').find_all('tr'):
+            myData += x.get_text()
+        myData = myData[1:]
+        itemList = myData.split("\n\n")
+
+        states = ['Delhi', 'Uttar Pradesh', 'Punjab', 'Rajasthan']
+        for item in itemList[0:35]:
+            dataList = item.split('\n')
+            if dataList[1] in states:
+                print(dataList)
+                nTitle = f'Cases of COVID 19 for State {dataList[1]}'
+                nText = f"Active Cases: {dataList[2]}\nCured: {dataList[3]}\nDeaths: {dataList[4]}\nTotal Confirmed Cases: {dataList[5]} "
+                notifyMe(nTitle, nText)
+                time.sleep(2)
+        time.sleep(3600)
